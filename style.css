@@ -1,0 +1,26 @@
+/* style.css */ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(120deg, #f0f4ff, #dce5ff); color: #333; margin: 0; padding: 0; }
+
+.container { max-width: 800px; margin: 40px auto; background: white; border-radius: 12px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); padding: 30px; animation: fadeIn 1s ease-in; }
+
+h1, h2 { text-align: center; color: #3a4ca8; }
+
+form { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+input, textarea { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; transition: border 0.3s ease; }
+
+input:focus, textarea:focus { border-color: #3a4ca8; outline: none; }
+
+button { padding: 10px; background: #3a4ca8; color: white; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s ease; }
+
+button:hover { background: #2c3b87; }
+
+.artikel { background: #f7f9ff; border: 1px solid #d1d8ff; border-radius: 10px; padding: 20px; margin: 20px 0; animation: slideUp 0.6s ease; }
+
+.komentar-section { margin-top: 15px; padding-top: 10px; border-top: 1px solid #ccc; }
+
+.komentar { margin-top: 5px; padding: 6px 10px; background: #eef3ff; border-radius: 6px; font-size: 14px; }
+
+/* Animasi */ @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+

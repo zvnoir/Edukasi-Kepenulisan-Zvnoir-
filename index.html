@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edukasi Kepenulisan</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(120deg, #f0f4ff, #dce5ff);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #3a4ca8;
+    }
+
+    form, .artikel {
+      margin-top: 20px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #3a4ca8;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .komentar-section {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+    }
+
+    .komentar {
+      background: #eef3ff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: 5px;
+    }
+
+    .isi-artikel {
+      display: none;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Edukasi Kepenulisan</h1>
+
+    <form id="formArtikel">
+      <h2>Unggah Artikel</h2>
+      <input type="password" id="kunciAdmin" placeholder="Kunci admin" required />
+      <input type="text" id="judulArtikel" placeholder="Judul artikel" required />
+      <textarea id="isiArtikel" placeholder="Isi artikel" required></textarea>
+      <button type="submit">Unggah</button>
+    </form>
+
+    <hr />
+    <h2>📝 Daftar Artikel</h2>
+    <div id="artikel-list"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getDatabase, ref, push, onValue, remove, set, update
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPtlS_qdp8qZNVE4xqcGPAD0Xfw1KaBho",
+      authDomain: "edukasi-zvnoir.firebaseapp.com",
+      databaseURL: "https://edukasi-zvnoir-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "edukasi-zvnoir",
+      storageBucket: "edukasi-zvnoir.appspot.com",
+      messagingSenderId: "1011207256750",
+      appId: "1:1011207256750:web:b3bed69d418df5c87b0b3f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const artikelRef = ref(db, "artikel");
+
+    const adminKey = "kunciraah";
+
+    document.getElementById("formArtikel").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const key = document.getElementById("kunciAdmin").value;
+      const judul = document.getElementById("judulArtikel").value;
+      const isi = document.getElementById("isiArtikel").value;
+      if (key !== adminKey) return alert("❌ Kunci salah!");
+      push(artikelRef, {
+        judul,
+        isi,
+        komentar: [],
+        sematkan: false,
+        waktu: Date.now()
+      });
+      e.target.reset();
+    });
+
+    function renderArtikel(data) {
+      const list = document.getElementById("artikel-list");
+      list.innerHTML = "";
+
+      const items = [];
+      data.forEach(child => {
+        const val = child.val();
+        items.push({ id: child.key, ...val });
+      });
+
+      items.sort((a, b) => {
+        if (b.sematkan !== a.sematkan) return b.sematkan - a.sematkan;
+        return b.waktu - a.waktu;
+      });
+
+      items.forEach((item) => {
+        const div = document.createElement("div");
+        div.className = "artikel";
+
+        div.innerHTML = `
+          <h3>${item.judul}</h3>
+          <button onclick="toggleIsi('${item.id}')" id="btn-${item.id}">📖 Baca Selengkapnya</button>
+          <div id="isi-${item.id}" class="isi-artikel">
+            <p>${item.isi}</p>
+            <div class="komentar-section">
+              <strong>Komentar:</strong>
+              <div id="komen-${item.id}">
+                ${(item.komentar || []).map(k => `<div class="komentar">${k}</div>`).join("")}
+              </div>
+              <input type="text" id="inputKomen-${item.id}" placeholder="Tulis komentar...">
+              <button onclick="kirimKomentar('${item.id}')">Kirim</button>
+            </div>
+            <button onclick="hapusArtikel('${item.id}')">🗑 Hapus</button>
+            <button onclick="sematkanArtikel('${item.id}', ${item.sematkan})">
+              ${item.sematkan ? '❌ Lepas Sematan' : '📌 Sematkan'}
+            </button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    onValue(artikelRef, renderArtikel);
+
+    window.toggleIsi = function(id) {
+      const isiDiv = document.getElementById("isi-" + id);
+      const btn = document.getElementById("btn-" + id);
+      if (isiDiv.style.display === "none" || isiDiv.style.display === "") {
+        isiDiv.style.display = "block";
+        btn.textContent = "🔽 Sembunyikan";
+      } else {
+        isiDiv.style.display = "none";
+        btn.textContent = "📖 Baca Selengkapnya";
+      }
+    }
+
+    window.kirimKomentar = function(id) {
+      const input = document.getElementById("inputKomen-" + id);
+      const isi = input.value.trim();
+      if (!isi) return;
+      const komenRef = ref(db, `artikel/${id}/komentar`);
+      onValue(komenRef, (snap) => {
+        const list = snap.val() || [];
+        list.push(isi);
+        set(komenRef, list);
+      }, { onlyOnce: true });
+      input.value = "";
+    }
+
+    window.hapusArtikel = function(id) {
+      const kunci = prompt("Masukkan kunci admin:");
+      if (kunci !== adminKey) return alert("Tidak diizinkan.");
+      remove(ref(db, `artikel/${id}`));
+    }
+
+    window.sematkanArtikel = function(id, status) {
+      const kunci = prompt("Masukkan kunci admin:");
+      if (kunci !== adminKey) return alert("Tidak diizinkan.");
+      update(ref(db, `artikel/${id}`), { sematkan: !status });
+    }
+  </script>
+</body>
+</html>
